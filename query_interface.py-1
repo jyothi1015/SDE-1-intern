@@ -1,0 +1,32 @@
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+# SQLite database setup
+conn = sqlite3.connect('logs.db')
+cursor = conn.cursor()
+
+@app.route('/query', methods=['GET'])
+def query_logs():
+    level = request.args.get('level')
+    source = request.args.get('source')
+    query = f'SELECT * FROM logs WHERE level = ? AND source = ?' if level and source else 'SELECT * FROM logs'
+
+    cursor.execute(query, (level, source))
+    result = cursor.fetchall()
+
+    logs = []
+    for row in result:
+        log = {
+            'timestamp': row[1],
+            'level': row[2],
+            'message': row[3],
+            'source': row[4]
+        }
+        logs.append(log)
+
+    return jsonify({"logs": logs})
+
+if __name__ == '__main__':
+    app.run(port=3001)

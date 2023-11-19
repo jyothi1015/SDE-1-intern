@@ -1,0 +1,1 @@
+curl -X POST -H "Content-Type: application/json" -d '{"level": "error", "message": "Failed to connect to DB", "timestamp": "2023-09-15T08:00:00Z", "source": "app_module"}' http://localhost:3000/ingest

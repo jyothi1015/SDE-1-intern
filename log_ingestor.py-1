@@ -1,0 +1,37 @@
+from flask import Flask, request, jsonify
+import sqlite3
+from datetime import datetime
+
+app = Flask(__name__)
+
+# SQLite database setup
+conn = sqlite3.connect('logs.db')
+cursor = conn.cursor()
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        level TEXT,
+        message TEXT,
+        source TEXT
+    )
+''')
+conn.commit()
+
+@app.route('/ingest', methods=['POST'])
+def ingest_log():
+    data = request.get_json()
+
+    if 'level' not in data or 'message' not in data or 'timestamp' not in data:
+        return jsonify({"error": "Invalid log format"}), 400
+
+    timestamp = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    log_data = (timestamp, data['level'], data['message'], data.get('source', ''))
+    
+    cursor.execute('INSERT INTO logs (timestamp, level, message, source) VALUES (?, ?, ?, ?)', log_data)
+    conn.commit()
+
+    return jsonify({"message": "Log ingested successfully"}), 201
+
+if __name__ == '__main__':
+    app.run(port=3000)
